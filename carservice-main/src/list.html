@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><title>Spare Parts – CarTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#e2e8f0;font-family:'Inter',sans-serif}
+nav{background:rgba(0,0,0,.3);backdrop-filter:blur(10px);padding:1rem 2rem;display:flex;gap:.5rem;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);flex-wrap:wrap}
+nav a{color:#e2e8f0;text-decoration:none;padding:.4rem .9rem;border-radius:6px;font-size:.88rem;transition:background .2s}nav a:hover{background:rgba(255,255,255,.1)}
+.brand{font-weight:700;font-size:1rem;color:#a78bfa!important;margin-right:.5rem}
+.container{max-width:1300px;margin:0 auto;padding:2rem}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}h1{font-size:1.6rem;font-weight:700}
+.alert{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;padding:.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.88rem}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:1.5rem}
+table{width:100%;border-collapse:collapse}th,td{padding:.75rem 1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.08);font-size:.85rem}
+th{color:#94a3b8;font-weight:500;text-transform:uppercase;font-size:.72rem;letter-spacing:.06em}tr:hover td{background:rgba(255,255,255,.03)}
+.btn{display:inline-block;padding:.45rem 1rem;border-radius:8px;text-decoration:none;font-size:.82rem;font-weight:500;transition:all .2s;border:none;cursor:pointer}
+.btn-primary{background:#7c3aed;color:#fff}.btn-warning{background:#f59e0b;color:#fff}
+.btn-danger{background:#ef4444;color:#fff}.btn-sm{padding:.26rem .6rem;font-size:.76rem}
+.badge{padding:.22rem .65rem;border-radius:999px;font-size:.72rem;font-weight:600}
+.bok{background:rgba(16,185,129,.2);color:#10b981}.blow{background:rgba(239,68,68,.2);color:#ef4444}
+.row-low td{background:rgba(239,68,68,.04)!important}
+.empty{text-align:center;padding:3rem;color:#94a3b8}
+
+/* Premium Card Layout */
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; margin-top:20px; }
+.nav-card { background: rgba(255,255,255,.07); border-radius:14px; padding:24px; border:1px solid rgba(255,255,255,.15); backdrop-filter: blur(5px); transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
+.nav-card:hover { transform: translateY(-5px); border-color: #7c3aed; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.status-badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.status-inactive { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+/* Overlay */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter: blur(4px); justify-content:center; align-items:center; z-index:1000; }
+.overlay.show { display:flex; }
+.popup { background: #1e1b4b; border: 1px solid rgba(255,255,255,0.15); border-radius:20px; padding:40px; text-align:center; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: nav}"></div>
+<div class="container">
+  <div class="ph">
+    <h1>📦 Spare Parts Inventory</h1>
+    <div th:if="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}">
+      <a href="/spare-parts/new" class="btn btn-primary">+ Add Part</a>
+    </div>
+    <div th:unless="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}">
+      <button class="btn btn-primary" onclick="requestCustomPart()">✉️ Request Custom Part</button>
+    </div>
+  </div>
+  <div class="alert" th:if="${lowStockCount > 0}">
+    ⚠️ <strong th:text="${lowStockCount}"></strong> part(s) are at or below minimum stock level!
+  </div>
+  <div th:if="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}" class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Part Name</th><th>Category</th><th>Brand</th>
+          <th>Stock</th><th>Min Level</th><th>Unit Price</th><th>Supplier</th><th>Added</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:if="${#lists.isEmpty(parts)}">
+          <td colspan="10" class="empty">No parts found. <a href="/spare-parts/new" style="color:#7c3aed">Add one!</a></td>
+        </tr>
+        <tr th:each="p : ${parts}" th:classappend="${p.lowStock ? 'row-low' : ''}">
+          <td th:text="${p.id}"></td>
+          <td th:text="${p.partName}"></td>
+          <td th:text="${p.category}"></td>
+          <td th:text="${p.brand}"></td>
+          <td>
+            <span th:text="${p.quantityInStock}"></span>
+            <span th:if="${p.lowStock}" class="badge blow" style="margin-left:.4rem">LOW</span>
+            <span th:unless="${p.lowStock}" class="badge bok" style="margin-left:.4rem">OK</span>
+          </td>
+          <td th:text="${p.minimumStockLevel}"></td>
+          <td th:text="${p.unitPrice != null ? 'Rs. ' + p.unitPrice : '—'}"></td>
+          <td th:text="${p.supplier}"></td>
+          <td th:text="${p.dateAdded}"></td>
+          <td style="display:flex;gap:.3rem">
+            <a th:href="@{/spare-parts/{id}/edit(id=${p.id})}" class="btn btn-warning btn-sm">Edit</a>
+            <a th:href="@{/spare-parts/{id}/delete(id=${p.id})}" class="btn btn-danger btn-sm"
+               onclick="return confirm('Delete?')">Del</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Customer Card View -->
+  <div th:unless="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}" class="grid">
+    <div th:each="p : ${parts}" class="nav-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <span style="font-size: 32px;" th:text="${
+                p.category != null && p.category.toLowerCase().contains('engine') ? '⚙️' :
+                p.category != null && p.category.toLowerCase().contains('brake') ? '🛑' :
+                p.category != null && (p.category.toLowerCase().contains('tire') || p.category.toLowerCase().contains('wheel')) ? '🛞' :
+                p.category != null && (p.category.toLowerCase().contains('oil') || p.category.toLowerCase().contains('fluid')) ? '🛢️' :
+                p.category != null && p.category.toLowerCase().contains('light') ? '💡' : '📦'
+            }">📦</span>
+            <span th:class="'status-badge ' + (${p.lowStock} ? 'status-inactive' : 'status-active')"
+                  th:text="${p.lowStock ? 'Limited Stock' : 'Available'}">Status</span>
+        </div>
+        <h4 style="font-size: 18px; margin-bottom: 6px; font-weight: 700;" th:text="${p.partName}">Part Name</h4>
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 16px;" th:text="${(p.category != null ? p.category : 'General') + ' | ' + (p.brand != null ? p.brand : 'Unbranded')}">Category</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-size: 20px; font-weight: 700; color: #10b981;" th:text="${'Rs. ' + (p.unitPrice != null ? p.unitPrice : '0.00')}">Price</span>
+            <button class="btn btn-primary" th:attr="data-name=${p.partName}" onclick="requestPart(this.getAttribute('data-name'))">Request</button>
+        </div>
+    </div>
+  </div>
+  <!-- Customer Request History -->
+  <div th:unless="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}" style="margin-top: 50px;">
+    <div class="ph">
+        <h2 style="font-size: 1.4rem; font-weight: 700;">🕒 My Request History</h2>
+    </div>
+    <div class="card" style="margin-top: 15px;">
+        <table th:if="${not #lists.isEmpty(myRequests)}">
+            <thead>
+                <tr>
+                    <th>Part Name</th>
+                    <th>Date Requested</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="r : ${myRequests}">
+                    <td th:text="${r.partName}" style="font-weight: 600; color: #a78bfa;"></td>
+                    <td th:text="${#temporals.format(r.requestDate, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td>
+                        <span th:class="'badge ' + (${r.status == 'PENDING' ? 'blow' : 'bok'})" 
+                              th:text="${r.status}">Status</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${#lists.isEmpty(myRequests)}" class="empty">You haven't requested any parts yet.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="requestOverlay" onclick="location.reload()">
+    <div class="popup" onclick="event.stopPropagation()">
+        <div style="font-size: 52px; margin-bottom: 20px;">✉️</div>
+        <h3 id="popupTitle">Request Sent!</h3>
+        <p id="popupMsg">We have received your request and will contact you shortly.</p>
+        <button class="btn btn-primary" onclick="location.reload()" style="width: 100%; padding: 12px;">Close</button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function requestCustomPart() {
+        const name = prompt("What part are you looking for?");
+        if (name) requestPart(name);
+    }
+
+    async function requestPart(name) {
+        try {
+            const res = await fetch('/spare-parts/request?partName=' + encodeURIComponent(name), {
+                method: 'POST'
+            });
+            const status = await res.text();
+            if (res.ok) {
+                document.getElementById('popupTitle').textContent = 'Request for ' + name;
+                if (status === 'AVAILABLE') {
+                    document.getElementById('popupMsg').textContent = 'Great news! This part is currently in stock. Our team will contact you shortly to arrange the installation.';
+                } else {
+                    document.getElementById('popupMsg').textContent = 'This part is not currently in stock. However, we have sent your request to our procurement team and will notify you as soon as it arrives.';
+                }
+                document.getElementById('requestOverlay').classList.add('show');
+            } else {
+                alert('Failed to send request. Please try again.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Connection error.');
+        }
+    }
+    function hidePopup() {
+        document.getElementById('requestOverlay').classList.remove('show');
+    }
+</script>
+</body>
+</html>

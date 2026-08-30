@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — CarServ</title>
+    <link rel="stylesheet" href="/theme.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(10,15,46,0.82);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 44px;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(61,90,254,0.08);
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .logo-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3d5afe, #e91e8c);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 18px rgba(233,30,140,0.35);
+        }
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .logo-text span { color: #e91e8c; }
+
+        .form-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .form-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 36px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 16px;
+        }
+        .input-grid .cs-form-group:first-child { grid-column: 1 / -1; }
+
+        .btn-register {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+        .divider-text { font-size: 12px; color: rgba(255,255,255,0.25); }
+
+        .footer-link {
+            text-align: center;
+            font-size: 13.5px;
+            color: rgba(255,255,255,0.35);
+        }
+        .footer-link a {
+            color: #e91e8c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .footer-link a:hover { color: #f48fb1; text-decoration: underline; }
+
+        /* Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            animation: orbFloat 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, #3d5afe, transparent 70%); top: -100px; left: -100px; }
+        .orb-2 { width: 350px; height: 350px; background: radial-gradient(circle, #e91e8c, transparent 70%); bottom: -80px; right: -80px; animation-delay: -4s; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0); }
+            50%       { transform: translate(25px,-25px); }
+        }
+    </style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="register-card">
+    <div class="logo-area">
+        <div class="logo-icon">🚗</div>
+        <div class="logo-text">Car<span>Serv</span></div>
+    </div>
+
+    <h1 class="form-title">Create Account</h1>
+    <p class="form-subtitle">Join thousands of happy car owners today</p>
+
+    <div class="cs-form-group">
+        <label>Full Name</label>
+        <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input class="cs-input" type="text" id="name" placeholder="Your full name" autocomplete="name">
+        </div>
+    </div>
+
+    <div class="cs-form-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input class="cs-input" type="email" id="email" placeholder="john@example.com" autocomplete="email">
+        </div>
+    </div>
+
+    <div class="cs-form-group">
+        <label>Phone Number</label>
+        <div class="input-wrap">
+            <span class="input-icon">📱</span>
+            <input class="cs-input" type="text" id="phone" placeholder="+1 234 567 890" autocomplete="tel">
+        </div>
+    </div>
+
+    <div class="cs-form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input class="cs-input" type="password" id="password" placeholder="Create a strong password" autocomplete="new-password">
+        </div>
+    </div>
+
+    <button class="btn-primary btn-register" id="register-btn" onclick="register()">
+        Create Account
+    </button>
+
+    <div class="cs-msg" id="msg"></div>
+
+    <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">Already have an account?</span>
+        <div class="divider-line"></div>
+    </div>
+
+    <div class="footer-link">
+        <a href="/">Sign in here</a>
+    </div>
+</div>
+
+<script>
+    function setMsg(text, type) {
+        const msg = document.getElementById('msg');
+        msg.textContent = text;
+        msg.className = 'cs-msg show ' + type;
+    }
+
+    function setLoading(loading) {
+        const btn = document.getElementById('register-btn');
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? '<span class="spinner"></span> Creating Account…'
+            : 'Create Account';
+    }
+
+    async function register() {
+        const name     = document.getElementById('name').value.trim();
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const phone    = document.getElementById('phone').value.trim();
+
+        if (!name || !email || !password) {
+            setMsg('⚠️ Name, email and password are required!', 'error');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const res = await fetch('/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, phone, role: 'USER' })
+            });
+
+            if (res.ok) {
+                const newUser = await res.json();
+                localStorage.setItem('loggedUser', JSON.stringify(newUser));
+                setMsg('✅ Account created! Redirecting to login…', 'success');
+                setTimeout(() => {
+                    localStorage.removeItem('loggedUser');
+                    window.location.href = '/';
+                }, 1600);
+            } else {
+                const body = await res.text();
+                setMsg(body.includes('already') ? '❌ Email already in use!' : '❌ Registration failed!', 'error');
+            }
+        } catch (e) {
+            setMsg('⚠️ Connection error. Is the server running?', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+</script>
+</body>
+</html>

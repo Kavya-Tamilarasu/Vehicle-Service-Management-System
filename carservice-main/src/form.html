@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><title>Spare Part Form – CarTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#e2e8f0;font-family:'Inter',sans-serif}
+nav{background:rgba(0,0,0,.3);backdrop-filter:blur(10px);padding:1rem 2rem;display:flex;gap:.5rem;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);flex-wrap:wrap}
+nav a{color:#e2e8f0;text-decoration:none;padding:.4rem .9rem;border-radius:6px;font-size:.88rem;transition:background .2s}nav a:hover{background:rgba(255,255,255,.1)}
+.brand{font-weight:700;font-size:1rem;color:#a78bfa!important;margin-right:.5rem}
+.container{max-width:800px;margin:0 auto;padding:2rem}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}h1{font-size:1.6rem;font-weight:700}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:2rem}
+.fg{margin-bottom:1rem}label{display:block;margin-bottom:.35rem;font-size:.83rem;color:#94a3b8}
+input,select,textarea{width:100%;padding:.6rem .9rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#e2e8f0;font-size:.88rem;outline:none;transition:border .2s}
+input:focus,select:focus{border-color:#7c3aed}select option{background:#1e1b4b;color:#e2e8f0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{display:inline-block;padding:.5rem 1.3rem;border-radius:8px;text-decoration:none;font-size:.88rem;font-weight:500;transition:all .2s;border:none;cursor:pointer}
+.btn-primary{background:#7c3aed;color:#fff}.btn-primary:hover{background:#6d28d9}
+.btn-info{background:#06b6d4;color:#fff}.actions{display:flex;gap:.8rem;margin-top:1.5rem}
+.hint{font-size:.78rem;color:#64748b;margin-top:.25rem}
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: nav}"></div>
+<div class="container">
+  <div class="ph">
+    <h1 th:text="${part.id != null ? 'Edit Spare Part' : 'Add Spare Part'}">Form</h1>
+    <a th:href="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN' ? '/admin-dashboard' : '/user-dashboard.html'}" class="btn btn-info">← Back</a>
+  </div>
+  <div class="card">
+    <form th:action="${part.id != null ? '/spare-parts/' + part.id + '/update' : '/spare-parts/save'}"
+          method="post" th:object="${part}">
+      <input type="hidden" th:field="*{id}"/>
+      <div class="grid2">
+        <div class="fg"><label>Part Name</label><input th:field="*{partName}" placeholder="Oil Filter"/></div>
+        <div class="fg"><label>Category</label><input th:field="*{category}" placeholder="Filters, Brakes..."/></div>
+        <div class="fg"><label>Brand</label><input th:field="*{brand}" placeholder="Bosch, NGK..."/></div>
+        <div class="fg"><label>Supplier</label><input th:field="*{supplier}" placeholder="Supplier name"/></div>
+        <div class="fg">
+          <label>Quantity in Stock</label>
+          <input type="number" th:field="*{quantityInStock}" placeholder="0"/>
+        </div>
+        <div class="fg">
+          <label>Minimum Stock Level</label>
+          <input type="number" th:field="*{minimumStockLevel}" placeholder="5"/>
+          <div class="hint">⚠️ Alert will show when stock falls at or below this level</div>
+        </div>
+        <div class="fg"><label>Unit Price (Rs.)</label><input type="number" step="0.01" th:field="*{unitPrice}" placeholder="0.00"/></div>
+        <div class="fg"><label>Date Added</label><input type="date" th:field="*{dateAdded}"/></div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">💾 Save Part</button>
+        <a th:href="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN' ? '/admin-dashboard' : '/user-dashboard.html'}" class="btn btn-info">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

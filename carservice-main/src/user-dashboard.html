@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — CarServ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue:        #3d5afe;
+            --pink:        #e91e8c;
+            --blue-soft:   #7986cb;
+            --pink-soft:   #f48fb1;
+            --navy:        #060b22;
+            --danger:      #ff4d6d;
+            --success:     #00e5a0;
+            --amber:       #ffb300;
+
+            /* Blended purple-violet midpoint */
+            --blend:       #9c3fcd;
+            --blend-soft:  rgba(156, 63, 205, 0.18);
+
+            --glass-bg:    rgba(10, 8, 40, 0.6);
+            --glass-border: rgba(255,255,255,0.07);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: var(--navy);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* ═══════════════════════════════
+           BACKGROUND — rich pink+blue mesh
+        ═══════════════════════════════ */
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background: url('/images/login-bg.avif') no-repeat center center / cover;
+            filter: brightness(0.15) saturate(1.6);
+            z-index: -3;
+        }
+
+        /* Multi-layer colour mesh */
+        .bg-mesh {
+            position: fixed; inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background:
+                /* top-left blue */
+                radial-gradient(ellipse 60% 55% at -5% -5%,
+                    rgba(61,90,254,0.45) 0%, transparent 55%),
+                /* top-right pink */
+                radial-gradient(ellipse 50% 45% at 105% -5%,
+                    rgba(233,30,140,0.38) 0%, transparent 55%),
+                /* bottom-left pink */
+                radial-gradient(ellipse 45% 40% at -5% 105%,
+                    rgba(233,30,140,0.30) 0%, transparent 55%),
+                /* bottom-right blue */
+                radial-gradient(ellipse 55% 50% at 105% 105%,
+                    rgba(61,90,254,0.35) 0%, transparent 55%),
+                /* centre blend */
+                radial-gradient(ellipse 50% 40% at 50% 50%,
+                    rgba(156,63,205,0.12) 0%, transparent 60%);
+        }
+
+        /* Slow-drifting animated orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: -1;
+            animation: drift 12s ease-in-out infinite;
+        }
+        .orb-1 {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(61,90,254,0.35), transparent 70%);
+            top: -120px; left: -120px;
+            animation-duration: 14s;
+        }
+        .orb-2 {
+            width: 420px; height: 420px;
+            background: radial-gradient(circle, rgba(233,30,140,0.32), transparent 70%);
+            bottom: -100px; right: -100px;
+            animation-duration: 11s;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(156,63,205,0.22), transparent 70%);
+            top: 45%; left: 60%;
+            animation-duration: 16s;
+            animation-delay: -8s;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%       { transform: translate(40px, -30px) scale(1.06); }
+            66%       { transform: translate(-30px, 25px) scale(0.94); }
+        }
+
+        /* ═══════════════════════════════
+           NAVBAR
+        ═══════════════════════════════ */
+        .navbar {
+            /* Pink→Blue shimmer gradient border at the bottom */
+            background: linear-gradient(
+                135deg,
+                rgba(10,8,40,0.92) 0%,
+                rgba(15,10,45,0.92) 100%
+            );
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-bottom: 1px solid transparent;
+            background-clip: padding-box;
+            box-shadow:
+                0 1px 0 0 rgba(233,30,140,0.25),
+                0 2px 0 0 rgba(61,90,254,0.15);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            gap: 6px;
+        }
+
+        .nav-logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-decoration: none;
+            background: linear-gradient(90deg, #7986cb 0%, #e91e8c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-right: 1.2rem;
+            flex-shrink: 0;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-links { display: flex; gap: 2px; align-items: center; }
+        .nav-links a {
+            color: rgba(255,255,255,0.58);
+            text-decoration: none;
+            padding: 7px 13px;
+            border-radius: 8px;
+            font-size: 0.87rem;
+            font-weight: 500;
+            transition: all 0.22s;
+            white-space: nowrap;
+            position: relative;
+        }
+        .nav-links a:hover {
+            color: #fff;
+            background: linear-gradient(135deg,
+                rgba(61,90,254,0.18),
+                rgba(233,30,140,0.14));
+        }
+
+        /* Profile / right side */
+        .nav-right { margin-left: auto; display: flex; align-items: center; }
+        .profile-wrap { position: relative; }
+        .profile-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--pink));
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.12);
+            cursor: pointer;
+            font-size: 15px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow:
+                0 0 0 3px rgba(233,30,140,0.15),
+                0 4px 18px rgba(233,30,140,0.4);
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+        .profile-btn:hover {
+            transform: scale(1.1);
+            box-shadow:
+                0 0 0 4px rgba(61,90,254,0.2),
+                0 6px 24px rgba(233,30,140,0.55);
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute; right: 0; top: 50px;
+            background: linear-gradient(160deg, rgba(8,5,35,0.98) 0%, rgba(14,6,42,0.98) 100%);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-top: 1px solid rgba(233,30,140,0.25);
+            border-radius: 16px;
+            width: 235px;
+            box-shadow:
+                0 16px 55px rgba(0,0,0,0.65),
+                0 0 30px rgba(233,30,140,0.08);
+            overflow: hidden;
+            backdrop-filter: blur(24px);
+            z-index: 300;
+        }
+        .dropdown.open { display: block; animation: ddIn 0.16s ease; }
+        @keyframes ddIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .dd-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex; align-items: center; gap: 12px;
+            background: linear-gradient(135deg,
+                rgba(61,90,254,0.06),
+                rgba(233,30,140,0.06));
+        }
+        .dd-avatar {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--pink));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 700; color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 3px 12px rgba(233,30,140,0.4);
+        }
+        .dd-info p    { font-size: 13px; font-weight: 600; color: #fff; }
+        .dd-info span { font-size: 11.5px; color: rgba(255,255,255,0.38); }
+
+        .dd-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; font-size: 13.5px;
+            color: rgba(255,255,255,0.68); cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            border: none; background: none;
+            width: 100%; text-align: left;
+            font-family: 'Outfit', sans-serif;
+        }
+        .dd-item:hover {
+            background: linear-gradient(90deg,
+                rgba(61,90,254,0.1),
+                rgba(233,30,140,0.07));
+            color: #fff;
+        }
+        .dd-item.danger { color: var(--danger); }
+        .dd-item.danger:hover { background: rgba(255,77,109,0.1); }
+        .dd-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 4px 0; }
+
+        /* ═══════════════════════════════
+           MAIN LAYOUT
+        ═══════════════════════════════ */
+        .main { max-width: 1160px; margin: 0 auto; padding: 2.4rem 1.8rem; }
+
+        /* ═══════════════════════════════
+           WELCOME BANNER
+        ═══════════════════════════════ */
+        .welcome-banner {
+            border-radius: 24px;
+            padding: 2.2rem 2.4rem;
+            margin-bottom: 2.4rem;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 1rem;
+            position: relative; overflow: hidden;
+
+            /* Full pink-to-blue gradient tinted glass */
+            background: linear-gradient(
+                135deg,
+                rgba(61,90,254,0.22)  0%,
+                rgba(156,63,205,0.16) 50%,
+                rgba(233,30,140,0.20) 100%
+            );
+            border: 1px solid transparent;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                0 0 0 1px rgba(233,30,140,0.18),
+                0 20px 60px rgba(0,0,0,0.35),
+                0 0 40px rgba(61,90,254,0.1);
+        }
+
+        /* Pink shimmer top-right */
+        .welcome-banner::before {
+            content: "";
+            position: absolute; right: -60px; top: -60px;
+            width: 260px; height: 260px;
+            background: radial-gradient(circle,
+                rgba(233,30,140,0.28), transparent 65%);
+            border-radius: 50%; pointer-events: none;
+        }
+        /* Blue shimmer bottom-left */
+        .welcome-banner::after {
+            content: "";
+            position: absolute; left: -40px; bottom: -40px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle,
+                rgba(61,90,254,0.22), transparent 65%);
+            border-radius: 50%; pointer-events: none;
+        }
+
+        .wb-text { position: relative; z-index: 1; }
+        .wb-title {
+            font-size: 1.75rem; font-weight: 800; color: #fff; margin-bottom: 6px;
+        }
+        .wb-title .grad {
+            background: linear-gradient(90deg,
+                var(--blue-soft) 0%,
+                var(--pink) 60%,
+                var(--pink-soft) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .wb-sub { font-size: 0.88rem; color: rgba(255,255,255,0.5); }
+        .wb-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+
+        .wb-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 11px 20px; border-radius: 12px;
+            font-size: 14px; font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer; transition: all 0.22s;
+            text-decoration: none; border: none;
+        }
+        .wb-btn.primary {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--pink) 100%);
+            color: #fff;
+            box-shadow:
+                0 6px 22px rgba(233,30,140,0.38),
+                0 2px 8px rgba(61,90,254,0.3);
+        }
+        .wb-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233,30,140,0.55), 0 4px 14px rgba(61,90,254,0.4);
+        }
+        .wb-btn.ghost {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.85);
+            border: 1px solid rgba(255,255,255,0.14);
+        }
+        .wb-btn.ghost:hover {
+            background: linear-gradient(135deg,
+                rgba(61,90,254,0.15),
+                rgba(233,30,140,0.12));
+            border-color: rgba(233,30,140,0.3);
+            color: #fff;
+        }
+        .wb-icon { font-size: 3rem; opacity: 0.75; position: relative; z-index: 1; }
+
+        /* ═══════════════════════════════
+           SECTION LABEL
+        ═══════════════════════════════ */
+        .section-label {
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.4px;
+            color: transparent;
+            background: linear-gradient(90deg, var(--blue-soft), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        /* ═══════════════════════════════
+           STAT CARDS
+        ═══════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 2.2rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: left;
+            text-decoration: none;
+            color: #e2e8f0;
+            display: flex; flex-direction: column; gap: 10px;
+            position: relative; overflow: hidden;
+            transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(22px);
+
+            /* Unique blended border each card */
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+
+        /* Pink-blue gradient shimmer on the top edge */
+        .stat-card::before {
+            content: "";
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(61,90,254,0.6) 30%,
+                rgba(233,30,140,0.6) 70%,
+                transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            border-color: rgba(233,30,140,0.2);
+            box-shadow:
+                0 16px 45px rgba(0,0,0,0.4),
+                0 0 30px rgba(61,90,254,0.12),
+                0 0 20px rgba(233,30,140,0.1);
+        }
+        .stat-card.warn:hover {
+            border-color: rgba(255,77,109,0.3);
+            box-shadow:
+                0 16px 45px rgba(0,0,0,0.4),
+                0 0 25px rgba(255,77,109,0.15);
+        }
+
+        /* Card inner glow blob */
+        .stat-card .card-glow {
+            position: absolute;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            filter: blur(40px);
+            top: -30px; right: -30px;
+            opacity: 0.35;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .stat-card:hover .card-glow { opacity: 0.55; }
+
+        .stat-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; position: relative;
+        }
+        /* Each icon gets a pink→blue background */
+        .stat-icon.blue-pink {
+            background: linear-gradient(135deg, rgba(61,90,254,0.2), rgba(233,30,140,0.2));
+            border: 1px solid rgba(233,30,140,0.15);
+        }
+        .stat-icon.pink-blue {
+            background: linear-gradient(135deg, rgba(233,30,140,0.2), rgba(61,90,254,0.2));
+            border: 1px solid rgba(61,90,254,0.15);
+        }
+        .stat-icon.amber  { background: rgba(255,179,0,0.15);  border: 1px solid rgba(255,179,0,0.15); }
+        .stat-icon.red    { background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.15); }
+
+        .stat-val {
+            font-size: 2.4rem; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg,
+                var(--blue-soft) 0%,
+                var(--pink-soft) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-val.red {
+            background: linear-gradient(135deg, #ff4d6d, #ff8fa3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-lbl {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase; letter-spacing: 0.6px;
+        }
+
+        /* ═══════════════════════════════
+           ALERTS
+        ═══════════════════════════════ */
+        #alertContainer {
+            display: flex; flex-direction: column; gap: 10px;
+            margin-bottom: 2.2rem;
+        }
+        .alert-empty { font-size: 13px; color: rgba(255,255,255,0.3); font-style: italic; }
+
+        .alert-item {
+            background: linear-gradient(135deg,
+                rgba(10,8,40,0.7) 0%,
+                rgba(14,8,44,0.7) 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-left: 4px solid;
+            border-left-color: var(--amber);
+            border-radius: 14px;
+            padding: 14px 18px;
+            display: flex; align-items: center; gap: 14px;
+            backdrop-filter: blur(18px);
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        .alert-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(255,179,0,0.1);
+        }
+        .alert-item.overdue {
+            border-left-color: var(--danger);
+            background: linear-gradient(135deg,
+                rgba(255,77,109,0.06) 0%,
+                rgba(10,8,40,0.7) 100%);
+        }
+        .alert-item.overdue:hover { box-shadow: 0 4px 20px rgba(255,77,109,0.12); }
+        .alert-icon-box {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+            background: linear-gradient(135deg,
+                rgba(61,90,254,0.1), rgba(255,179,0,0.1));
+        }
+        .alert-item.overdue .alert-icon-box {
+            background: linear-gradient(135deg,
+                rgba(233,30,140,0.1), rgba(255,77,109,0.1));
+        }
+        .alert-title  { font-size: 13.5px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+        .alert-msg    { font-size: 12px; color: rgba(255,255,255,0.43); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-18px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ═══════════════════════════════
+           SERVICE NAV CARDS
+        ═══════════════════════════════ */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .nav-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px;
+            padding: 1.6rem;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(22px);
+            position: relative; overflow: hidden;
+        }
+
+        /* Blended gradient border on hover via box-shadow */
+        .nav-card::after {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: 20px;
+            background: linear-gradient(135deg,
+                rgba(61,90,254,0.08) 0%,
+                rgba(156,63,205,0.06) 50%,
+                rgba(233,30,140,0.08) 100%);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .nav-card:hover::after { opacity: 1; }
+        .nav-card:hover {
+            transform: translateY(-5px) scale(1.015);
+            border-color: rgba(156,63,205,0.3);
+            box-shadow:
+                0 14px 40px rgba(0,0,0,0.38),
+                0 0 28px rgba(61,90,254,0.14),
+                0 0 20px rgba(233,30,140,0.1);
+        }
+
+        /* Shimmer top line on hover */
+        .nav-card::before {
+            content: "";
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg,
+                var(--blue) 0%, var(--blend) 50%, var(--pink) 100%);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.35s ease;
+            border-radius: 2px 2px 0 0;
+        }
+        .nav-card:hover::before { transform: scaleX(1); }
+
+        .nc-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-bottom: 14px;
+            position: relative; z-index: 1;
+        }
+        /* Each icon blends pink & blue differently */
+        .nc-icon.i1 { background: linear-gradient(135deg, rgba(61,90,254,0.22), rgba(233,30,140,0.16)); }
+        .nc-icon.i2 { background: linear-gradient(135deg, rgba(233,30,140,0.2),  rgba(61,90,254,0.16)); }
+        .nc-icon.i3 { background: linear-gradient(135deg, rgba(156,63,205,0.22), rgba(61,90,254,0.15)); }
+        .nc-icon.i4 { background: linear-gradient(135deg, rgba(233,30,140,0.22), rgba(156,63,205,0.18)); }
+        .nc-icon.i5 { background: linear-gradient(135deg, rgba(61,90,254,0.18),  rgba(156,63,205,0.22)); }
+
+        .nc-title {
+            font-size: 14.5px; font-weight: 700; color: #fff;
+            margin-bottom: 6px; position: relative; z-index: 1;
+        }
+        .nc-desc {
+            font-size: 12.5px; color: rgba(255,255,255,0.38);
+            line-height: 1.55; position: relative; z-index: 1;
+        }
+
+        /* ═══════════════════════════════
+           MODAL OVERLAY
+        ═══════════════════════════════ */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.78);
+            backdrop-filter: blur(8px);
+            justify-content: center; align-items: center;
+            z-index: 600;
+        }
+        .modal-overlay.show { display: flex; animation: fadeOv 0.2s ease; }
+        @keyframes fadeOv { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal {
+            background: linear-gradient(160deg,
+                rgba(8,5,35,0.98) 0%,
+                rgba(18,6,50,0.98) 100%);
+            border: 1px solid rgba(255,255,255,0.09);
+            /* pink accent top */
+            border-top: 2px solid;
+            border-image: linear-gradient(90deg, var(--blue), var(--pink)) 1;
+            border-radius: 22px;
+            padding: 42px 38px;
+            text-align: center;
+            max-width: 390px; width: 93%;
+            box-shadow:
+                0 28px 80px rgba(0,0,0,0.65),
+                0 0 40px rgba(61,90,254,0.08),
+                0 0 30px rgba(233,30,140,0.06);
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.94); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .modal-icon { font-size: 54px; margin-bottom: 14px; }
+        .modal h3 {
+            font-size: 22px; font-weight: 700;
+            background: linear-gradient(90deg, var(--blue-soft), var(--pink-soft));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .modal p { font-size: 14px; color: rgba(255,255,255,0.48); line-height: 1.65; margin-bottom: 26px; }
+
+        .modal-btn {
+            padding: 12px 32px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            border: none; font-family: 'Outfit', sans-serif;
+            transition: all 0.22s;
+        }
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--blue), var(--pink));
+            color: #fff;
+            box-shadow: 0 6px 22px rgba(233,30,140,0.35);
+        }
+        .modal-btn.primary:hover { box-shadow: 0 10px 30px rgba(233,30,140,0.5); transform: translateY(-1px); }
+        .modal-btn.ghost {
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-btn.ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .modal-btn.red {
+            background: rgba(255,77,109,0.14);
+            color: var(--danger);
+            border: 1px solid rgba(255,77,109,0.22);
+        }
+        .modal-btn.red:hover { background: rgba(255,77,109,0.26); }
+        .modal-btn-row { display: flex; gap: 10px; justify-content: center; }
+
+        /* ═══════════════════════════════
+           SCROLLBAR
+        ═══════════════════════════════ */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--blue), var(--pink));
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Pink/blue background mesh -->
+<div class="bg-mesh"></div>
+
+<!-- Animated orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar">
+    <a href="/dashboard" class="nav-logo">🚗 CarServ</a>
+    <div class="nav-links">
+        <a href="/cars">🚗 Cars</a>
+        <a href="/service-records">🔧 Services</a>
+        <a href="/reminders">⏰ Reminders</a>
+        <a href="/reviews">⭐ Reviews</a>
+        <a href="/spare-parts">📦 Parts</a>
+    </div>
+    <div class="nav-right">
+        <div class="profile-wrap">
+            <button class="profile-btn" id="profileBtn" onclick="toggleDropdown()">
+                <span id="profileInitial">U</span>
+            </button>
+            <div class="dropdown" id="dropdown">
+                <div class="dd-header">
+                    <div class="dd-avatar" id="ddAvatar">U</div>
+                    <div class="dd-info">
+                        <p id="dropName">User</p>
+                        <span id="dropEmail">email</span>
+                    </div>
+                </div>
+                <button class="dd-item" onclick="goToEditProfile()">✏️ &nbsp; Edit Profile</button>
+                <hr class="dd-divider">
+                <button class="dd-item danger" onclick="showDeleteConfirm()">🗑️ &nbsp; Delete Account</button>
+                <button class="dd-item danger" onclick="logout()">🚪 &nbsp; Logout</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Thymeleaf data bridge -->
+<script th:inline="javascript" xmlns:th="http://www.thymeleaf.org">
+    /*<![CDATA[*/
+    const serverUser = {
+        id:    /*[[${currentUserId != null ? currentUserId : ''}]]*/ '',
+        name:  /*[[${userName  != null ? userName  : ''}]]*/ '',
+        email: /*[[${userEmail != null ? userEmail : ''}]]*/ '',
+        role:  /*[[${userRole  != null ? userRole  : 'USER'}]]*/ 'USER'
+    };
+    if (serverUser.name) {
+        localStorage.setItem('loggedUser', JSON.stringify(serverUser));
+    }
+    /*]]>*/
+</script>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div class="wb-text">
+            <div class="wb-title">
+                Welcome back, <span class="grad" id="welcomeName">Driver</span> 👋
+            </div>
+            <div class="wb-sub">Your vehicle maintenance is our priority. Track and schedule services here.</div>
+        </div>
+        <div class="wb-actions">
+            <button class="wb-btn ghost"   onclick="window.location.href='/cars/new'">🚗 Add Car</button>
+            <button class="wb-btn primary" onclick="window.location.href='/service-records/new'">📅 Book Service</button>
+        </div>
+        <div class="wb-icon">🏎️</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section-label">Overview</div>
+    <div class="stats-grid">
+
+        <a href="/cars" class="stat-card">
+            <div class="card-glow" style="background:radial-gradient(circle,rgba(61,90,254,0.5),transparent 70%)"></div>
+            <div class="stat-icon blue-pink">🚗</div>
+            <div class="stat-val" id="statCars">0</div>
+            <div class="stat-lbl">Total Cars</div>
+        </a>
+
+        <a href="/service-records" class="stat-card">
+            <div class="card-glow" style="background:radial-gradient(circle,rgba(233,30,140,0.45),transparent 70%)"></div>
+            <div class="stat-icon pink-blue">🔧</div>
+            <div class="stat-val" id="statRecords">0</div>
+            <div class="stat-lbl">Service History</div>
+        </a>
+
+        <a href="/reminders" class="stat-card">
+            <div class="card-glow" style="background:radial-gradient(circle,rgba(156,63,205,0.4),transparent 70%)"></div>
+            <div class="stat-icon amber">⏰</div>
+            <div class="stat-val" id="statActive">0</div>
+            <div class="stat-lbl">Active Reminders</div>
+        </a>
+
+        <a href="/reminders" class="stat-card warn">
+            <div class="card-glow" style="background:radial-gradient(circle,rgba(255,77,109,0.45),transparent 70%)"></div>
+            <div class="stat-icon red">🚨</div>
+            <div class="stat-val red" id="statOverdue">0</div>
+            <div class="stat-lbl">Overdue!</div>
+        </a>
+
+    </div>
+
+    <!-- Alerts -->
+    <div class="section-label">Service Alerts</div>
+    <div id="alertContainer">
+        <p class="alert-empty">No urgent alerts today. ✅</p>
+    </div>
+
+    <!-- Service Nav Cards -->
+    <div class="section-label">Services</div>
+    <div class="nav-grid">
+        <div class="nav-card" onclick="window.location.href='/cars'">
+            <div class="nc-icon i1">🚗</div>
+            <div class="nc-title">My Vehicles &amp; Bookings</div>
+            <div class="nc-desc">Manage your vehicle details and track your service requests.</div>
+        </div>
+        <div class="nav-card" onclick="window.location.href='/service-records'">
+            <div class="nc-icon i2">🔧</div>
+            <div class="nc-title">Service Records</div>
+            <div class="nc-desc">View your full service and maintenance history in detail.</div>
+        </div>
+        <div class="nav-card" onclick="window.location.href='/reminders'">
+            <div class="nc-icon i3">🔔</div>
+            <div class="nc-title">Service Reminders</div>
+            <div class="nc-desc">Stay ahead — get notified about upcoming services.</div>
+        </div>
+        <div class="nav-card" onclick="window.location.href='/reviews'">
+            <div class="nc-icon i4">⭐</div>
+            <div class="nc-title">Feedback &amp; Reviews</div>
+            <div class="nc-desc">Share your feedback and browse community reviews.</div>
+        </div>
+        <div class="nav-card" onclick="window.location.href='/spare-parts'">
+            <div class="nc-icon i5">📦</div>
+            <div class="nc-title">Spare Parts</div>
+            <div class="nc-desc">Browse available parts and check inventory stock.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Coming Soon Modal -->
+<div class="modal-overlay" id="comingSoonOverlay" onclick="hideComingSoon()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-icon">🚧</div>
+        <h3 id="popupTitle">Coming Soon</h3>
+        <p>This section is being developed by our team and will be available very soon!</p>
+        <button class="modal-btn primary" onclick="hideComingSoon()">Got it!</button>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal-overlay" id="deleteOverlay">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-icon">⚠️</div>
+        <h3>Delete Account?</h3>
+        <p>This will permanently delete your account and all your data. This action <strong style="color:#ff4d6d;">cannot be undone.</strong></p>
+        <div class="modal-btn-row">
+            <button class="modal-btn ghost" onclick="hideDeleteConfirm()">Cancel</button>
+            <button class="modal-btn red"   onclick="deleteAccount()">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── User init ──
+    const user = JSON.parse(localStorage.getItem('loggedUser'));
+    if (!user) window.location.href = '/';
+
+    const initial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+    document.getElementById('welcomeName').textContent     = user.name  || 'Driver';
+    document.getElementById('profileInitial').textContent  = initial;
+    document.getElementById('ddAvatar').textContent        = initial;
+    document.getElementById('dropName').textContent        = user.name  || 'User';
+    document.getElementById('dropEmail').textContent       = user.email || '';
+
+    // ── Alerts ──
+    async function loadAlerts() {
+        try {
+            const res = await fetch('/reminders/alerts');
+            if (!res.ok) return;
+            const alerts = await res.json();
+            const container = document.getElementById('alertContainer');
+            if (alerts.length > 0) {
+                container.innerHTML = alerts.map(msg => {
+                    const isOverdue = msg.toLowerCase().includes('overdue');
+                    const icon  = isOverdue ? '🚨' : '🔔';
+                    const title = isOverdue ? 'Critical Action Required' : 'Upcoming Maintenance';
+                    return `
+                        <div class="alert-item ${isOverdue ? 'overdue' : ''}">
+                            <div class="alert-icon-box">${icon}</div>
+                            <div>
+                                <div class="alert-title">${title}</div>
+                                <div class="alert-msg">${msg}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+        } catch (e) { console.error('Alert load error:', e); }
+    }
+
+    // ── Stats ──
+    async function loadUserStats() {
+        try {
+            const res = await fetch('/api/user/stats');
+            if (!res.ok) return;
+            const s = await res.json();
+            document.getElementById('statCars').textContent    = s.totalCars       ?? 0;
+            document.getElementById('statRecords').textContent = s.totalRecords     ?? 0;
+            document.getElementById('statActive').textContent  = s.activeReminders  ?? 0;
+            document.getElementById('statOverdue').textContent = s.overdueReminders ?? 0;
+        } catch (e) { console.error('Stats load error:', e); }
+    }
+
+    loadAlerts();
+    loadUserStats();
+
+    // ── Dropdown ──
+    function toggleDropdown() {
+        document.getElementById('dropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+        const btn = document.getElementById('profileBtn');
+        const dd  = document.getElementById('dropdown');
+        if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
+            dd.classList.remove('open');
+        }
+    });
+    function goToEditProfile() { window.location.href = '/edit-profile'; }
+
+    // ── Modals ──
+    function showComingSoon(section) {
+        document.getElementById('popupTitle').textContent = section + ' — Coming Soon!';
+        document.getElementById('comingSoonOverlay').classList.add('show');
+    }
+    function hideComingSoon() { document.getElementById('comingSoonOverlay').classList.remove('show'); }
+
+    function showDeleteConfirm() {
+        document.getElementById('dropdown').classList.remove('open');
+        document.getElementById('deleteOverlay').classList.add('show');
+    }
+    function hideDeleteConfirm() { document.getElementById('deleteOverlay').classList.remove('show'); }
+
+    async function deleteAccount() {
+        try {
+            const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                localStorage.removeItem('loggedUser');
+                document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.href = '/';
+            }
+        } catch (e) { console.error('Delete error:', e); }
+    }
+
+    // ── Logout ──
+    function logout() {
+        localStorage.removeItem('loggedUser');
+        document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = '/';
+    }
+</script>
+</body>
+</html>

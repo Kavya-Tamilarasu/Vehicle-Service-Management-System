@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="nav">
+    <link rel="stylesheet" href="/theme.css">
+
+    <nav class="cs-nav">
+        <a href="/dashboard" class="brand"><span>🚗</span> CarServ</a>
+        <div class="nav-links">
+            <a href="/cars">🚗 Cars</a>
+            <a href="/service-records">🔧 Services</a>
+            <a href="/reminders">⏰ Reminders</a>
+            <a href="/reviews">⭐ Reviews</a>
+            <a href="/spare-parts">📦 Inventory</a>
+            <a th:if="${userRole == 'ADMIN' or userRole == 'SUPER_ADMIN'}" href="/admin-dashboard" class="admin-link">👥 Admin</a>
+        </div>
+        <div class="nav-right">
+            <div class="profile-wrap">
+                <button class="profile-btn" id="profileBtn" onclick="toggleDropdown()">
+                    <span th:text="${userInitial != null ? userInitial : 'U'}">U</span>
+                </button>
+                <div class="profile-dropdown" id="dropdown">
+                    <div class="dd-header">
+                        <p th:text="${userName != null ? userName : 'User'}">User</p>
+                        <span th:text="${userEmail != null ? userEmail : 'user@email.com'}">user@email.com</span>
+                    </div>
+                    <button class="dd-item" onclick="window.location.href='/edit-profile'">✏️ &nbsp; Edit Profile</button>
+                    <hr class="dd-divider">
+                    <button class="dd-item danger" onclick="logout()">🚪 &nbsp; Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleDropdown() {
+            document.getElementById('dropdown').classList.toggle('open');
+        }
+        document.addEventListener('click', function(e) {
+            const btn = document.getElementById('profileBtn');
+            const dd  = document.getElementById('dropdown');
+            if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
+                dd.classList.remove('open');
+            }
+        });
+        function logout() {
+            localStorage.removeItem('loggedUser');
+            document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/';
+        }
+    </script>
+</div>
+
+</body>
+</html>
